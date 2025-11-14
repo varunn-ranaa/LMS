@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Library theme - warm scholarly palette */
+    --background: 35 35% 96%;
+    --foreground: 25 40% 15%;
+
+    --card: 35 45% 98%;
+    --card-foreground: 25 40% 15%;
+
+    --popover: 35 45% 98%;
+    --popover-foreground: 25 40% 15%;
+
+    --primary: 25 55% 28%;
+    --primary-foreground: 35 45% 98%;
+
+    --secondary: 150 25% 35%;
+    --secondary-foreground: 35 45% 98%;
+
+    --muted: 35 25% 88%;
+    --muted-foreground: 25 20% 45%;
+
+    --accent: 210 45% 32%;
+    --accent-foreground: 35 45% 98%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 35 45% 98%;
+
+    --border: 35 20% 85%;
+    --input: 35 20% 90%;
+    --ring: 25 55% 28%;
+
+    --radius: 0.75rem;
+    
+    /* Library specific colors */
+    --library-brown: 25 55% 28%;
+    --library-green: 150 25% 35%;
+    --library-blue: 210 45% 32%;
+    --library-cream: 35 35% 96%;
+    --library-parchment: 35 45% 98%;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Dark library theme */
+    --background: 25 30% 8%;
+    --foreground: 35 25% 92%;
+
+    --card: 25 25% 12%;
+    --card-foreground: 35 25% 92%;
+
+    --popover: 25 25% 12%;
+    --popover-foreground: 35 25% 92%;
+
+    --primary: 35 45% 85%;
+    --primary-foreground: 25 40% 15%;
+
+    --secondary: 150 20% 25%;
+    --secondary-foreground: 35 25% 92%;
+
+    --muted: 25 15% 20%;
+    --muted-foreground: 35 15% 60%;
+
+    --accent: 210 35% 28%;
+    --accent-foreground: 35 25% 92%;
+
+    --destructive: 0 65% 45%;
+    --destructive-foreground: 35 25% 92%;
+
+    --border: 25 20% 22%;
+    --input: 25 20% 22%;
+    --ring: 35 45% 85%;
+    
+    --library-brown: 35 45% 75%;
+    --library-green: 150 20% 40%;
+    --library-blue: 210 40% 45%;
+    --library-cream: 25 30% 8%;
+    --library-parchment: 25 25% 12%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+}
+
+@layer utilities {
+  .text-library-brown {
+    color: hsl(var(--library-brown));
+  }
+  .bg-library-brown {
+    background-color: hsl(var(--library-brown));
+  }
+  .text-library-green {
+    color: hsl(var(--library-green));
+  }
+  .bg-library-green {
+    background-color: hsl(var(--library-green));
+  }
+  .text-library-blue {
+    color: hsl(var(--library-blue));
+  }
+  .bg-library-blue {
+    background-color: hsl(var(--library-blue));
+  }
+}
