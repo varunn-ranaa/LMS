@@ -77,6 +77,7 @@ export type Database = {
           status: string
           title: string
           updated_at: string
+          total_copies: number
         }
         Insert: {
           author: string
@@ -88,6 +89,7 @@ export type Database = {
           status?: string
           title: string
           updated_at?: string
+          total_copies?: number
         }
         Update: {
           author?: string
@@ -99,6 +101,7 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
+          total_copies?: number
         }
         Relationships: [
           {
