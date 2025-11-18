@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Library Management System
 
 A modern, full-featured library management system built with React, TypeScript, and Supabase.
