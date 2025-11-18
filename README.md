@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Library Management System
 
 A modern, full-featured library management system built with React, TypeScript, and Supabase.
@@ -203,3 +204,6 @@ open an issue on GitHub.
 
 **Project Owner**: varunn-ranaa  
 **Repository**: [LMS](https://github.com/varunn-ranaa/LMS)
+=======
+
+>>>>>>> 11abb92d79ef90535aafbcb7db3274de44d2b326
