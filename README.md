@@ -1,73 +1,205 @@
-# Welcome to your Lovable project
+# Library Management System
 
-## Project info
+A modern, full-featured library management system built with React, TypeScript, and Supabase.
 
-**URL**: https://lovable.dev/projects/2911d787-3b7b-48df-9941-1af5f92aacdf
+## Features
 
-## How can I edit this code?
+- **User Authentication**: Secure sign-in and sign-up functionality
+- **Admin Dashboard**: Manage library resources and track operations
+- **Student Portal**: Browse books, manage requests, and track returns
+- **Fine Management**: Automatic calculation and tracking of overdue fines
+- **Return Requests**: Students can request and manage book returns
+- **Real-time Updates**: Powered by Supabase for instant data synchronization
+- **Responsive Design**: Mobile-friendly interface using Tailwind CSS
 
-There are several ways of editing your application.
+## Technology Stack
 
-**Use Lovable**
+- **Frontend**: React 19+ with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS
+- **Database**: Supabase (PostgreSQL)
+- **Form Management**: React Hook Form
+- **UI Components**: Shadcn/ui
+- **Package Manager**: Bun
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/2911d787-3b7b-48df-9941-1af5f92aacdf) and start prompting.
+## Project Structure
 
-Changes made via Lovable will be committed automatically to this repo.
+```
+src/
+├── components/        # React components and UI elements
+├── pages/            # Application pages
+├── hooks/            # Custom React hooks
+├── api/              # API route handlers
+├── lib/              # Utility functions and helpers
+├── config/           # Configuration files
+├── integrations/     # External service integrations
+└── assets/           # Static assets
 
-**Use your preferred IDE**
+supabase/            # Database configuration and migrations
+```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Getting Started
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Prerequisites
 
-Follow these steps:
+- Node.js 18+ or Bun
+- Git
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Installation
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+1. Clone the repository:
+```bash
+git clone https://github.com/varunn-ranaa/LMS.git
+cd library-management-sys
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+2. Install dependencies:
+```bash
+bun install
+# or
+npm install
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+3. Set up environment variables:
+Create a `.env.local` file with your Supabase credentials:
+```
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+4. Run the development server:
+```bash
+bun dev
+# or
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The application will be available at `http://localhost:5173`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Available Scripts
 
-**Use GitHub Codespaces**
+- `bun dev` - Start development server
+- `bun build` - Build for production
+- `bun preview` - Preview production build
+- `bun lint` - Run ESLint
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Key Features
 
-## What technologies are used for this project?
+### Authentication
+- Student and admin authentication flows
+- Secure credential management
+- Session persistence
 
-This project is built with:
+### Book Management
+- Browse library catalog
+- Search and filter books
+- Request books
+- Track lending history
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Fine System
+- Automatic fine calculation for overdue books
+- Fine tracking and payment status
+- Reminder notifications
 
-## How can I deploy this project?
+### Admin Controls
+- Dashboard for managing system operations
+- User management
+- Book inventory management
+- Fine and penalty configuration
 
-Simply open [Lovable](https://lovable.dev/projects/2911d787-3b7b-48df-9941-1af5f92aacdf) and click on Share -> Publish.
+## Database Schema
 
-## Can I connect a custom domain to my Lovable project?
+The project uses Supabase (PostgreSQL) with the following main tables:
 
-Yes, you can!
+- **Users**: Authentication and profile information
+- **Books**: Library catalog
+- **Loans**: Book lending records
+- **ReturnRequests**: Book return requests
+- **Fines**: Overdue fine tracking
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+See `supabase/migrations/` for detailed schema definitions.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## Configuration
+
+### Admin Credentials
+Admin default credentials are defined in `src/config/adminCredentials.ts`
+
+### Fine Calculator
+Fine calculation logic is implemented in `src/lib/fineCalculator.ts`
+
+## Known Issues & Limitations
+
+### Current Limitations
+- ⚠️ **Email Notifications**: Reminder email functionality is partially implemented and may not work reliably
+- ⚠️ **Payment Gateway Integration**: Fine payment integration is not yet implemented
+- ⚠️ **Book Search**: Advanced search filters are limited; full-text search not available
+- ⚠️ **Barcode Scanning**: Barcode/QR code scanning for book management is not implemented
+- ⚠️ **Batch Operations**: Admin cannot perform bulk operations on multiple books
+- ⚠️ **Fine Waiver**: No grace period or fine waiver system for special cases
+- ⚠️ **Report Generation**: PDF and Excel report generation features are missing
+- ⚠️ **Mobile App**: Currently web-only; native mobile app not available
+- ⚠️ **User Profile Images**: Profile picture upload functionality not implemented
+- ⚠️ **Book Reviews & Ratings**: User review and rating system not available
+
+### Performance Considerations
+- Large datasets (10,000+ books) may impact search performance
+- Real-time notifications may have latency issues with high concurrent users
+- Media files are not optimized for large uploads
+
+### Security Notes
+- Environment variables must be properly configured for production
+- Default admin credentials should be changed immediately
+- CORS settings need to be configured for production deployment
+
+## Future Enhancements
+
+### Phase 1 (High Priority)
+- [ ] **Email Notifications**: Implement reliable email reminders for due dates and overdue books
+- [ ] **Payment Gateway**: Integrate Stripe or PayPal for online fine payments
+- [ ] **Advanced Search**: Full-text search with filters (author, genre, publication date, etc.)
+- [ ] **User Profile Management**: Allow users to update profile information and profile pictures
+- [ ] **Book Reviews**: Add user review and rating system for books
+
+### Phase 2 (Medium Priority)
+- [ ] **Barcode/QR Code**: Implement barcode scanning for quick book checkout and return
+- [ ] **Report Generation**: Create PDF and Excel reports for admin (circulation, fines, etc.)
+- [ ] **Batch Operations**: Bulk import/export and management of books
+- [ ] **Fine Waiver System**: Implement grace periods and manual fine waiver approvals
+- [ ] **SMS Notifications**: Add SMS reminders for overdue books
+- [ ] **Book Recommendations**: AI-based book recommendation system
+
+### Phase 3 (Nice to Have)
+- [ ] **Mobile App**: Native iOS and Android applications
+- [ ] **Hold System**: Students can reserve/hold books that are currently checked out
+- [ ] **Book History**: Detailed borrowing history and analytics for each user
+- [ ] **Fine Analytics**: Advanced analytics dashboard for fine patterns and revenue tracking
+- [ ] **Multi-Library Support**: Support for multiple library branches
+- [ ] **Digital Books**: Support for e-books and digital resources
+- [ ] **Late Fee Customization**: Configurable fine calculation rules per library policy
+
+### Technical Improvements
+- [ ] Implement caching for frequently accessed data
+- [ ] Add comprehensive error handling and logging
+- [ ] Implement API rate limiting
+- [ ] Add unit and integration tests
+- [ ] Improve TypeScript type coverage
+- [ ] Implement dark mode support
+- [ ] Add accessibility (a11y) improvements
+- [ ] Database query optimization and indexing
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is open source and available under the MIT License.
+
+## Support
+
+open an issue on GitHub.
+
+---
+
+**Project Owner**: varunn-ranaa  
+**Repository**: [LMS](https://github.com/varunn-ranaa/LMS)

@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import heroImage from "@/assets/library-hero.jpg";
 import mentorImage from "@/assets/mymentor.jpg";
 import varunPhoto from "@/assets/varun.jpeg";
-// import siddhantPhoto from "@/assets/team/siddhant.jpg";
+import siddhantPhoto from "@/assets/siddhant.jpeg";
 import rishabhPhoto from "@/assets/rishabh.jpeg";
 
 const Landing = () => {
@@ -80,7 +80,7 @@ const Landing = () => {
       name: "Siddhant Rawat", 
       role: "Backend Developer",
       specialization: "API Development",
-    //  photo: siddhantPhoto,
+       photo: siddhantPhoto,
       description: "Builds robust APIs and server logic with focus on performance",
       skills: ["Express.js", "REST APIs", "Authentication", "Testing"],
       github: "https://github.com/siddhantrawat",

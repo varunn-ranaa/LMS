@@ -10,10 +10,21 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Calendar } from "@/components/ui/calendar";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { BookOpen, LogOut, Users, BookMarked, Calendar, IndianRupee, Plus, Edit, Trash2, Check, X, Bell, RefreshCw, Search, Filter, MoreVertical, User } from "lucide-react";
+import { BookOpen, LogOut, Users, BookMarked, Calendar as CalendarIcon, IndianRupee, Plus, Edit, Trash2, Check, X, Bell, RefreshCw, Search, Filter, MoreVertical, User } from "lucide-react";
+import { format } from "date-fns";
+
+// Fine calculation function
+const calculateFine = (dueDate: string, returnDate?: string, dailyRate: number = 10) => {
+  const due = new Date(dueDate);
+  const today = returnDate ? new Date(returnDate) : new Date();
+  const daysOverdue = Math.max(0, Math.floor((today.getTime() - due.getTime()) / (1000 * 60 * 60 * 24)));
+  const totalFine = daysOverdue * dailyRate;
+  return { totalFine, daysOverdue, isOverdue: daysOverdue > 0 };
+};
 
 const AdminDashboard = () => {
   const { user, profile, signOut, loading, isAdmin } = useAuth();
@@ -54,6 +65,11 @@ const AdminDashboard = () => {
   const [isBookDialogOpen, setIsBookDialogOpen] = useState(false);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<any>(null);
+
+  // Custom due date states
+  const [customDueDate, setCustomDueDate] = useState<Date>();
+  const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
+  const [currentRequest, setCurrentRequest] = useState<any>(null);
 
   // Redirect if not admin
   useEffect(() => {
@@ -251,7 +267,7 @@ const AdminDashboard = () => {
   const fetchBorrowedBooks = async () => {
     const { data, error } = await supabase
       .from("borrowed_books")
-      .select(`*, books (title, author), profiles (full_name)`)
+      .select(`*, books (title, author, cover_image), profiles (full_name)`)
       .is("return_date", null)
       .order("due_date", { ascending: true });
     
@@ -284,16 +300,21 @@ const AdminDashboard = () => {
         { count: categoriesCount },
         { count: usersCount },
         { count: borrowedCount },
-        { data: feeData }
+        { data: borrowedBooksData }
       ] = await Promise.all([
         supabase.from("books").select("*", { count: "exact", head: true }),
         supabase.from("categories").select("*", { count: "exact", head: true }),
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase.from("borrowed_books").select("*", { count: "exact", head: true }).is("return_date", null),
-        supabase.from("borrowed_books").select("due_fee").is("return_date", null)
+        supabase.from("borrowed_books").select("due_date").is("return_date", null)
       ]);
 
-      const totalFees = feeData?.reduce((sum, item) => sum + (item.due_fee || 0), 0) || 0;
+      // Calculate total fees by calculating fines for all borrowed books
+      let totalFees = 0;
+      borrowedBooksData?.forEach(book => {
+        const fine = calculateFine(book.due_date);
+        totalFees += fine.totalFine;
+      });
 
       setStats({
         totalBooks: booksCount || 0,
@@ -305,6 +326,48 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error("Error fetching stats:", error);
       toast.error("Failed to load statistics");
+    }
+  };
+
+  // Update fines in database
+  const updateAllFines = async () => {
+    try {
+      // Get all borrowed books that haven't been returned
+      const { data: borrowedBooks, error } = await supabase
+        .from('borrowed_books')
+        .select('*')
+        .is('return_date', null);
+
+      if (error) throw error;
+
+      let updatedCount = 0;
+
+      // Update fines for each borrowed book
+      for (const book of borrowedBooks || []) {
+        const fine = calculateFine(book.due_date);
+        
+        // Only update if there's a fine
+        if (fine.totalFine > 0) {
+          const { error: updateError } = await supabase
+            .from('borrowed_books')
+            .update({
+              due_fee: fine.totalFine,
+              total_fine: fine.totalFine,
+              last_fine_update: new Date().toISOString()
+            })
+            .eq('id', book.id);
+
+          if (!updateError) {
+            updatedCount++;
+          }
+        }
+      }
+
+      toast.success(`Fines updated for ${updatedCount} books`);
+      fetchBorrowedBooks();
+      fetchStats();
+    } catch (error: any) {
+      toast.error('Failed to update fines: ' + error.message);
     }
   };
 
@@ -390,6 +453,12 @@ const AdminDashboard = () => {
     }
   };
 
+  const openApproveDialog = (request: any) => {
+    setCurrentRequest(request);
+    setCustomDueDate(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)); // Default to 14 days from now
+    setIsApproveDialogOpen(true);
+  };
+
   const handleApproveRequest = async (requestId: string, bookId: string, userId: string) => {
     try {
       setRequestActionLoadingId(requestId);
@@ -409,6 +478,9 @@ const AdminDashboard = () => {
         return;
       }
 
+      // Use custom due date if set, otherwise default to 14 days
+      const dueDate = customDueDate || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+
       // Update request status and create borrowed book record
       await Promise.all([
         supabase
@@ -426,7 +498,10 @@ const AdminDashboard = () => {
             user_id: userId,
             book_id: bookId,
             request_id: requestId,
-            due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days
+            due_date: dueDate.toISOString(),
+            daily_fine_rate: 10,
+            total_fine: 0,
+            due_fee: 0
           })
       ]);
 
@@ -445,6 +520,11 @@ const AdminDashboard = () => {
       fetchBorrowedCounts();
       fetchBooks();
       fetchStats();
+      
+      // Reset the custom due date and close dialog
+      setCustomDueDate(undefined);
+      setIsApproveDialogOpen(false);
+      setCurrentRequest(null);
     } catch (error: any) {
       toast.error(error.message || "Failed to approve request");
     } finally {
@@ -483,18 +563,27 @@ const AdminDashboard = () => {
         throw new Error("Borrowed book details unavailable");
       }
 
-      const dueDate = new Date(borrowed.due_date);
-      const today = new Date();
-      const daysOverdue = Math.max(0, Math.ceil((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)));
-      const dueFee = daysOverdue * 10;
+      // Calculate final fine
+      const fine = calculateFine(borrowed.due_date, processedAt);
+      
+      // Update data with proper data types
+      const updateData = {
+        return_date: processedAt,
+        due_fee: fine.totalFine,
+        total_fine: fine.totalFine,
+        last_fine_update: processedAt,
+        fee_paid: fine.totalFine === 0
+      };
 
-      await supabase
+      const { error: updateError } = await supabase
         .from("borrowed_books")
-        .update({
-          return_date: processedAt,
-          due_fee: dueFee,
-        })
+        .update(updateData)
         .eq("id", returnRequest.borrowed_book_id);
+
+      if (updateError) {
+        console.error('Error updating borrowed book:', updateError);
+        throw updateError;
+      }
 
       await supabase
         .from("return_requests")
@@ -505,13 +594,14 @@ const AdminDashboard = () => {
         })
         .eq("id", returnRequest.id);
 
-      toast.success("Return request approved");
+      toast.success(`Return approved${fine.totalFine > 0 ? ` with ₹${fine.totalFine} fine` : ''}`);
       fetchReturnRequests();
       fetchBorrowedBooks();
       fetchBorrowedCounts();
       fetchBooks();
       fetchStats();
     } catch (error: any) {
+      console.error('Error in handleApproveReturn:', error);
       toast.error(error.message || "Failed to approve return request");
     } finally {
       setReturnActionLoadingId(null);
@@ -684,6 +774,19 @@ const AdminDashboard = () => {
               >
                 <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               </Button>
+
+              {/* Update Fines Button */}
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={updateAllFines}
+                title="Update all fines"
+                className="border-slate-300"
+              >
+                <IndianRupee className="h-4 w-4 mr-1" />
+                Update Fines
+              </Button>
+
               <NotificationBell />
               <Button variant="outline" size="sm" onClick={signOut} className="border-slate-300">
                 <LogOut className="h-4 w-4 mr-2" />
@@ -1006,6 +1109,97 @@ const AdminDashboard = () => {
                 <p className="text-slate-600 text-sm">Manage book borrow and return requests</p>
               </div>
 
+              {/* Approve Request Dialog */}
+              <Dialog open={isApproveDialogOpen} onOpenChange={setIsApproveDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Approve Book Request</DialogTitle>
+                    <DialogDescription>
+                      Set the due date for this book borrowing request.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    {currentRequest && (
+                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                        <img 
+                          src={currentRequest.books?.cover_image || "/placeholder.svg"} 
+                          alt={currentRequest.books?.title} 
+                          className="w-12 h-16 object-cover rounded border"
+                        />
+                        <div>
+                          <h4 className="font-semibold text-sm">{currentRequest.books?.title}</h4>
+                          <p className="text-slate-600 text-xs">{currentRequest.books?.author}</p>
+                          <p className="text-slate-500 text-xs">Requested by: {currentRequest.profiles?.full_name}</p>
+                        </div>
+                      </div>
+                    )}
+                    <div className="space-y-2">
+                      <Label htmlFor="due-date">Due Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start text-left font-normal"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {customDueDate ? format(customDueDate, "PPP") : "Pick a date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={customDueDate}
+                            onSelect={setCustomDueDate}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="due-time">Due Time (Optional)</Label>
+                      <Input
+                        type="time"
+                        value={customDueDate ? format(customDueDate, "HH:mm") : ""}
+                        onChange={(e) => {
+                          if (customDueDate && e.target.value) {
+                            const [hours, minutes] = e.target.value.split(':');
+                            const newDate = new Date(customDueDate);
+                            newDate.setHours(parseInt(hours), parseInt(minutes));
+                            setCustomDueDate(newDate);
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsApproveDialogOpen(false);
+                        setCustomDueDate(undefined);
+                        setCurrentRequest(null);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        if (currentRequest) {
+                          handleApproveRequest(
+                            currentRequest.id,
+                            currentRequest.book_id,
+                            currentRequest.user_id
+                          );
+                        }
+                      }}
+                      disabled={!customDueDate}
+                    >
+                      Approve Request
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
               <div className="grid gap-4">
                 {/* Borrow Requests */}
                 <Card className="bg-white/80 border-slate-200/60">
@@ -1049,7 +1243,7 @@ const AdminDashboard = () => {
                                 <div className="flex gap-2">
                                   <Button 
                                     size="sm"
-                                    onClick={() => handleApproveRequest(request.id, request.book_id, request.user_id)} 
+                                    onClick={() => openApproveDialog(request)} 
                                     disabled={requestActionLoadingId === request.id || availableCopies <= 0}
                                     className="text-xs h-8"
                                   >
@@ -1168,11 +1362,12 @@ const AdminDashboard = () => {
 
               <div className="grid gap-3">
                 {borrowedBooks.map((borrowed) => {
+                  // Calculate current fine (real-time)
+                  const fine = calculateFine(borrowed.due_date);
                   const dueDate = new Date(borrowed.due_date);
                   const today = new Date();
                   const daysRemaining = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-                  const dueFee = daysRemaining < 0 ? Math.abs(daysRemaining) * 10 : 0;
-                  const isOverdue = daysRemaining < 0;
+                  const isOverdue = fine.isOverdue;
 
                   return (
                     <Card key={borrowed.id} className={`bg-white/80 border-slate-200/60 ${isOverdue ? "border-red-200/50 bg-red-50/30" : ""}`}>
@@ -1197,13 +1392,13 @@ const AdminDashboard = () => {
                           <div className="text-right flex flex-col items-end gap-2">
                             <Badge variant={isOverdue ? "destructive" : daysRemaining <= 3 ? "secondary" : "default"}>
                               {isOverdue 
-                                ? `${Math.abs(daysRemaining)}d overdue` 
+                                ? `${fine.daysOverdue}d overdue` 
                                 : `${daysRemaining}d left`}
                             </Badge>
-                            {dueFee > 0 && (
+                            {fine.totalFine > 0 && (
                               <div className="flex items-center gap-1 text-red-600 font-semibold text-xs">
                                 <IndianRupee className="h-3 w-3" />
-                                <span>{dueFee}</span>
+                                <span>₹{fine.totalFine} ({fine.daysOverdue} days)</span>
                               </div>
                             )}
                           </div>
