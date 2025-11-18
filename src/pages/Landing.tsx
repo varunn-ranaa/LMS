@@ -8,9 +8,9 @@ import { useState } from "react";
 import { toast } from "sonner";
 import heroImage from "@/assets/library-hero.jpg";
 import mentorImage from "@/assets/mymentor.jpg";
-import varunPhoto from "@/assets/varun.jpeg";
-import siddhantPhoto from "@/assets/siddhant.jpeg";
-import rishabhPhoto from "@/assets/rishabh.jpeg";
+// import varunPhoto from "@/assets/varun.jpeg";
+// import siddhantPhoto from "@/assets/siddhant.jpeg";
+// import rishabhPhoto from "@/assets/rishabh.jpeg";
 
 const Landing = () => {
   const [feedbackForm, setFeedbackForm] = useState({ 
@@ -68,7 +68,7 @@ const Landing = () => {
       name: "Varun Rana", 
       role: "Team Leader",
       specialization: "Backend & Database",
-      photo: varunPhoto,
+     photo: null,
       description: "Leads the team and handles backend architecture and database design",
       skills: ["Node.js", "PostgreSQL", "Supabase", "API Design"],
       github: "https://github.com/varunn-ranaa",
@@ -80,7 +80,7 @@ const Landing = () => {
       name: "Siddhant Rawat", 
       role: "Backend Developer",
       specialization: "API Development",
-       photo: siddhantPhoto,
+      photo: null,
       description: "Builds robust APIs and server logic with focus on performance",
       skills: ["Express.js", "REST APIs", "Authentication", "Testing"],
       github: "https://github.com/siddhantrawat",
@@ -92,7 +92,7 @@ const Landing = () => {
       name: "Rishabh Devshali", 
       role: "Frontend Developer", 
       specialization: "UI/UX Design",
-      photo: rishabhPhoto,
+      photo: null,
       description: "Creates beautiful and responsive user interfaces with modern design",
       skills: ["React", "TypeScript", "Tailwind CSS", "Figma"],
       github: "https://github.com/rishabhdevshali",
